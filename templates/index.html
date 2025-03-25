@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ITSM Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>ITSM Incident Management</h1>
+        
+        <div class="form-container">
+            <h2>Create New Incident</h2>
+            <form id="incidentForm">
+                <input type="text" id="title" placeholder="Incident Title" required>
+                <textarea id="description" placeholder="Description" required></textarea>
+                <select id="priority" required>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                </select>
+                <button type="submit">Create Incident</button>
+            </form>
+        </div>
+
+        <div class="incidents-container">
+            <h2>Incidents</h2>
+            <div id="incidentsList"></div>
+        </div>
+    </div>
+
+    <script>
+        async function loadIncidents() {
+            const response = await fetch('/api/incidents');
+            const incidents = await response.json();
+            const list = document.getElementById('incidentsList');
+            list.innerHTML = incidents.map(incident => `
+                <div class="incident-card ${incident.priority.toLowerCase()}">
+                    <h3>${incident.title}</h3>
+                    <p>${incident.description}</p>
+                    <div class="incident-meta">
+                        <span>Priority: ${incident.priority}</span>
+                        <span>Status: ${incident.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('incidentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const response = await fetch('/api/incidents', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    title: document.getElementById('title').value,
+                    description: document.getElementById('description').value,
+                    priority: document.getElementById('priority').value
+                })
+            });
+            if (response.ok) {
+                loadIncidents();
+                e.target.reset();
+            }
+        });
+
+        loadIncidents();
+    </script>
+</body>
+</html>
